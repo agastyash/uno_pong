@@ -27,6 +27,7 @@ void victoryScreen(String winner);
 void mainMenu();
 
 // Game variables
+const unsigned int WIN_SCORE =               5;
 const unsigned long PADDLE_UPDATE_RATE =    20;
 const unsigned long BALL_UPDATE_RATE =      5;
 const uint8_t PADDLE_LENGTH =               16;
@@ -125,7 +126,7 @@ bool refreshBall(unsigned long time)
         // Check for a vertical wall collision, consequently call a goal
         if(new_x == 0)
         {
-            goal("Player"); // Player scored a goal
+            goal("USER"); // Player scored a goal
         }
         else if(new_x == 127)
         {
@@ -246,7 +247,7 @@ void goal(String winner)
     delay(2000);
     display.clearDisplay();
     // If score passes some max value, display cooler animation and offer a replay
-    if (player_score >= 5 || cpu_score >= 5)
+    if (player_score >= WIN_SCORE || cpu_score >= WIN_SCORE)
     {
         victoryScreen(winner);
         player_score = cpu_score = 0;
@@ -280,7 +281,7 @@ void victoryScreen(String winner)
 
     // Animation and scoreboard display
     display.getTextBounds(String(winner + " WINS!"), 0, 0, &centercursorx, &centercursory, &centerwidth, &centerheight);
-    display.setCursor((SCREEN_WIDTH-centerwidth)/2, ((SCREEN_HEIGHT-centerheight)/2));
+    display.setCursor((SCREEN_WIDTH-centerwidth)/2, SCREEN_HEIGHT/2);
     display.println(winner + " WINS!");
     /* String scoreboard = "[CPU " + String(cpu_score) + " : " + String(player_score) + " PLAYER]";
     display.getTextBounds(scoreboard, 0, 0, &centercursorx, &centercursory, &centerwidth, &centerheight);
