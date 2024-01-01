@@ -7,7 +7,7 @@
 
 // Graphics libraries
 #include <Adafruit_GFX.h>
-#include <Fonts/FreeMonoBoldOblique12pt7b.h>
+#include <Fonts/FreeMonoOblique9pt7b.h>
 // Custom fireworks animation library
 #include <fireworks_ssd1306.h>
 
@@ -19,19 +19,18 @@
 #define SCREEN_HEIGHT   64
 #define OLED_RESET      -1
 
-// Game variables
-const unsigned long PADDLE_UPDATE_RATE =    25;
-const unsigned long BALL_UPDATE_RATE =      10;
-const uint8_t PADDLE_LENGTH =               16;
-
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
 // Function definitions
 bool refreshBall(unsigned long time);
 bool refreshPaddles(unsigned long time);
 void goal(String winner);
 void victoryScreen(String winner);
+void mainMenu();
+
+// Game variables
+const unsigned long PADDLE_UPDATE_RATE =    20;
+const unsigned long BALL_UPDATE_RATE =      5;
+const uint8_t PADDLE_LENGTH =               16;
+bool gameState =                         false;
 
 // Ball variables
 uint8_t ball_x = 64, ball_y = 32; // Position
@@ -44,7 +43,7 @@ unsigned long paddle_update;
 const uint8_t CPU_X = 12;
 uint8_t cpu_y = 16;
 
-// Player Paddle variables
+// Player Paddle and control variables
 const uint8_t PLAYER_X = 115;
 uint8_t player_y = 16;
 static bool up_state = false;
@@ -58,6 +57,9 @@ int16_t centercursorx, centercursory; uint16_t centerwidth, centerheight;
 
 // Scorekeeping
 unsigned int cpu_score, player_score = 0;
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 void setup() {
     // Initialize display, splash adafruit logo briefly
@@ -77,14 +79,15 @@ void setup() {
     pinMode(UP_BUTTON, INPUT);
     pinMode(DOWN_BUTTON, INPUT);
 
-    // Enable internal pullup resistor on input pins
+    // Enable internal pullup resistor on input pins (not necessary with 10kOhm resistors on the circuit already)
     // digitalWrite(UP_BUTTON,1);
     // digitalWrite(DOWN_BUTTON,1);
 
-    // Start game after 1 second post boot
     // Draw court
     display.drawRect(0, 0, 128, 64, WHITE);
-    while(millis() - start < 1000); // instead of this delay, add a cool (animated) splash screen
+
+    // Start game after 1 second has passed
+    while(millis() - start < 1000);
     display.display();
 
     paddle_update = ball_update = millis();
@@ -101,10 +104,13 @@ void loop() {
 
     // Request an update if either the ball or paddles are due for a refresh
     update = refreshBall(time) | refreshPaddles(time);
+    // Bitwise OR operator '|' used above since the normal '||' OR operator will simply ignore the second condition to save time, if the first condition returns 'true'
 
     // Refresh display whenever requested
     if(update)
-    display.display();
+    {
+        display.display();
+    }
 }
 
 // Update ball location
@@ -270,10 +276,7 @@ void victoryScreen(String winner)
     display.clearDisplay();
 
     // Different text style for victory screen
-    display.setTextSize(1);
-    display.setTextColor(WHITE);
-    display.setTextWrap(false);
-    display.setFont(&FreeMonoBoldOblique12pt7b);
+    display.setFont(&FreeMonoOblique9pt7b);
 
     // Animation and scoreboard display
     display.getTextBounds(String(winner + " WINS!"), 0, 0, &centercursorx, &centercursory, &centerwidth, &centerheight);
@@ -285,4 +288,6 @@ void victoryScreen(String winner)
     display.println(scoreboard); */
     display.display();
     delay(2000);
+    // Different text style for victory screen
+    display.setFont(NULL);
 }
