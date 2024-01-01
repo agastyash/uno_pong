@@ -1,21 +1,23 @@
 #include <Arduino.h>
 
-// SSD1306 Communication libraries
+// SSD1306 Interfacing libraries
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 
-// Graphics library
+// Graphics libraries
 #include <Adafruit_GFX.h>
+#include <Fonts/FreeMonoBoldOblique12pt7b.h>
 // Custom fireworks animation library
 #include <fireworks_ssd1306.h>
 
 // Pin definitions
 #define UP_BUTTON       6
 #define DOWN_BUTTON     7
-// Screen resolution definition
-#define SCREEN_WIDTH    128 // OLED display width, in pixels
-#define SCREEN_HEIGHT   64 // OLED display height, in pixels
+// Screen definition (w/h in pixels, reset pin -1 -> same as Arduino)
+#define SCREEN_WIDTH    128
+#define SCREEN_HEIGHT   64
+#define OLED_RESET      -1
 
 // Game variables
 const unsigned long PADDLE_UPDATE_RATE =    25;
@@ -23,14 +25,12 @@ const unsigned long BALL_UPDATE_RATE =      10;
 const uint8_t PADDLE_LENGTH =               16;
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-#define OLED_RESET      -1 // Same as Arduino
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Function definitions
-void drawCourt();
 bool refreshBall(unsigned long time);
 bool refreshPaddles(unsigned long time);
-void goal(String winner); // 0 = CPU, 1 = Player
+void goal(String winner);
 void victoryScreen(String winner);
 
 // Ball variables
@@ -82,7 +82,8 @@ void setup() {
     // digitalWrite(DOWN_BUTTON,1);
 
     // Start game after 1 second post boot
-    drawCourt();
+    // Draw court
+    display.drawRect(0, 0, 128, 64, WHITE);
     while(millis() - start < 1000); // instead of this delay, add a cool (animated) splash screen
     display.display();
 
@@ -106,46 +107,47 @@ void loop() {
     display.display();
 }
 
-// Court Rendering
-void drawCourt() {
-    display.drawRect(0, 0, 128, 64, WHITE);
-}
-
 // Update ball location
 bool refreshBall(unsigned long time)
 {
-    if(time > ball_update) {
+    if(time > ball_update)
+    {
         // Move ball to next location
         new_x = ball_x + ball_dir_x;
         new_y = ball_y + ball_dir_y;
 
-        // Check for a vertical wall collision
-        if(new_x == 0) {
+        // Check for a vertical wall collision, consequently call a goal
+        if(new_x == 0)
+        {
             goal("Player"); // Player scored a goal
         }
-        else if(new_x == 127) {
+        else if(new_x == 127)
+        {
             goal("CPU"); // CPU scored a goal
         }
 
-        // Check for a CPU Paddle collision
-        if(new_x == CPU_X && new_y >= cpu_y && new_y <= cpu_y + PADDLE_LENGTH) {
-            ball_dir_x = -ball_dir_x;
-            new_x += ball_dir_x + ball_dir_x;
+        // Logic for paddle and top/bottom wall collisions:
+        // Inverse the direction of the ball in x or y directions respectively, maintain the other direction
+
+        // Check for a horizontal wall collision
+        if(new_y == 0 || new_y == 63)
+        {
+            ball_dir_y = -ball_dir_y;
+            new_y += ball_dir_y + ball_dir_y;
         }
 
-        // Check for a Player Paddle collision
-        if(new_x == PLAYER_X
-            && new_y >= player_y
-            && new_y <= player_y + PADDLE_LENGTH)
+        // Check for a CPU Paddle collision
+        if(new_x == CPU_X && new_y >= cpu_y && new_y <= cpu_y + PADDLE_LENGTH)
         {
             ball_dir_x = -ball_dir_x;
             new_x += ball_dir_x + ball_dir_x;
         }
 
-        // Check for a horizontal wall collision, consequently call a goal
-        if(new_y == 0 || new_y == 63) {
-            ball_dir_y = -ball_dir_y;
-            new_y += ball_dir_y + ball_dir_y;
+        // Check for a Player Paddle collision
+        if(new_x == PLAYER_X && new_y >= player_y && new_y <= player_y + PADDLE_LENGTH)
+        {
+            ball_dir_x = -ball_dir_x;
+            new_x += ball_dir_x + ball_dir_x;
         }
 
         // Clear old ball and draw new ball on the updated location
@@ -162,7 +164,7 @@ bool refreshBall(unsigned long time)
     return false;
 }
 
-// Update paddle position
+// Update paddle positions
 bool refreshPaddles(unsigned long time)
 {
     if (time > paddle_update)
@@ -210,7 +212,7 @@ bool refreshPaddles(unsigned long time)
     return false;
 }
 
-// Goal celebration
+// Goal scorekeeping and celebration screen
 void goal(String winner)
 {
     // Clear court area
@@ -245,7 +247,7 @@ void goal(String winner)
     }
     // Reset court and ball
     display.clearDisplay();
-    drawCourt();
+    display.drawRect(0, 0, 128, 64, WHITE);
     ball_x = 64, ball_y = 32;
     // Random direction for the reset ball
     ball_dir_x = (-1 + 2*(rand() % 2)), ball_dir_y = (-1 + 2*(rand() % 2));
@@ -267,14 +269,20 @@ void victoryScreen(String winner)
     }
     display.clearDisplay();
 
+    // Different text style for victory screen
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setTextWrap(false);
+    display.setFont(&FreeMonoBoldOblique12pt7b);
+
     // Animation and scoreboard display
     display.getTextBounds(String(winner + " WINS!"), 0, 0, &centercursorx, &centercursory, &centerwidth, &centerheight);
-    display.setCursor((SCREEN_WIDTH-centerwidth)/2, ((SCREEN_HEIGHT-centerheight)/2) - 10);
+    display.setCursor((SCREEN_WIDTH-centerwidth)/2, ((SCREEN_HEIGHT-centerheight)/2));
     display.println(winner + " WINS!");
-    String scoreboard = "[CPU " + String(cpu_score) + " : " + String(player_score) + " PLAYER]";
+    /* String scoreboard = "[CPU " + String(cpu_score) + " : " + String(player_score) + " PLAYER]";
     display.getTextBounds(scoreboard, 0, 0, &centercursorx, &centercursory, &centerwidth, &centerheight);
     display.setCursor((SCREEN_WIDTH-centerwidth)/2, ((SCREEN_HEIGHT-centerheight)/2) + 8);
-    display.println(scoreboard);
+    display.println(scoreboard); */
     display.display();
-    delay(3000);
+    delay(2000);
 }
