@@ -7,42 +7,43 @@
 
 // Graphics libraries
 #include <Adafruit_GFX.h>
-#include <Fonts/FreeMonoOblique9pt7b.h>
 // Custom fireworks animation library
 #include <fireworks_ssd1306.h>
 
 // Pin definitions
 #define UP_BUTTON       6
 #define DOWN_BUTTON     7
+
 // Screen definition (w/h in pixels, reset pin -1 -> same as Arduino)
-#define SCREEN_WIDTH    128
-#define SCREEN_HEIGHT   64
-#define OLED_RESET      -1
+#define SCREEN_WIDTH  128
+#define SCREEN_HEIGHT  64
+#define OLED_RESET     -1
 
 // Function definitions
 bool refreshBall(unsigned long time);
 bool refreshPaddles(unsigned long time);
 void goal(String winner);
 void victoryScreen(String winner);
-void mainMenu();
+void renderMenu();
 
 // Game variables
 const unsigned int WIN_SCORE =               5; // Score required to win a match
-const unsigned long PADDLE_UPDATE_DELAY =   20; // Paddle speed
-const unsigned long BALL_UPDATE_DELAY =      5; // Ball speed
-const uint8_t PADDLE_LENGTH =               16; // Length of both paddles
+const unsigned long PADDLE_UPDATE_DELAY =    1; // Paddle speed
+const unsigned long BALL_UPDATE_DELAY =      1; // Ball speed
+const uint8_t PADDLE_LENGTH =               12; // Length of both paddles
+unsigned int DIFFICULTY =                   30; // CPU paddle difficulty setting
 bool gameState =                         false; // Game state variable for menu implementation [TODO]
 
 // Ball variables
 uint8_t ball_x =    64, ball_y =    32; // Position
 uint8_t ball_dir_x = 1, ball_dir_y = 1; // Direction
-uint8_t new_x, new_y; // Updated position placeholders
+uint8_t new_x, new_y;                   // Updated position placeholders
 unsigned long ball_update;
 
 // CPU Paddle variables
 unsigned long paddle_update;
 const uint8_t CPU_X = 12;
-uint8_t cpu_y = 16;
+uint8_t cpu_y =       16;
 
 // Player Paddle variables
 const uint8_t PLAYER_X = 115;
@@ -86,17 +87,19 @@ void setup() {
     digitalWrite(UP_BUTTON,1);
     digitalWrite(DOWN_BUTTON,1);
 
-    // Draw court
-    display.drawRect(0, 0, 128, 64, WHITE);
-
-    // Start game after 1 second has passed
+    // Start after 1 second has passed
     while(millis() - start < 1000);
-    display.display();
 
+    // Set paddle and ball refresh counters before beginning game logic
     paddle_update = ball_update = millis();
 }
 
 void loop() {
+    if (!gameState)
+    {
+        renderMenu();
+    }
+
     // Reset update and control booleans, refresh real-time counter
     bool update = false;
     unsigned long time = millis();
@@ -110,10 +113,58 @@ void loop() {
     // Bitwise OR operator '|' used above since the normal '||' OR operator will simply ignore the second condition to save time, if the first condition returns 'true'
 
     // Refresh display whenever requested
-    if(update)
+    if(update && gameState)
     {
         display.display();
     }
+}
+
+// Render main menu
+void renderMenu()
+{
+    display.clearDisplay();
+    display.drawRect(0, 0, 128, 64, WHITE);
+
+    // Different text style for menu
+    display.setTextSize(2);
+    // Render the play button in a box
+    display.getTextBounds(String("Play"), 0, 0, &centercursorx, &centercursory, &centerwidth, &centerheight);
+    display.setCursor((SCREEN_WIDTH-centerwidth)/2, (SCREEN_HEIGHT-centerheight)/2);
+    display.println("Play");
+    display.drawRect(((SCREEN_WIDTH-centerwidth)/2) - 5, ((SCREEN_HEIGHT-centerheight)/2) - 5, centerwidth + 10, centerheight + 10, WHITE);
+    // Render help text
+    display.setTextSize(1);
+    display.getTextBounds(String("[press any button]"), 0, 0, &centercursorx, &centercursory, &centerwidth, &centerheight);
+    display.setCursor((SCREEN_WIDTH-centerwidth)/2, (SCREEN_HEIGHT/2)+20);
+    display.println("[press any button]");
+
+    display.display();
+    
+    while (!(digitalRead(UP_BUTTON) == LOW) && !(digitalRead(DOWN_BUTTON) == LOW))
+    {
+        // do absolutely nothing
+    }
+
+    // Invert the play button colors for a second as a reaction (same code, opposite colors)
+    display.setTextSize(2);
+    display.setTextColor(BLACK);
+    display.getTextBounds(String("Play"), 0, 0, &centercursorx, &centercursory, &centerwidth, &centerheight);
+    display.fillRect(((SCREEN_WIDTH-centerwidth)/2) - 5, ((SCREEN_HEIGHT-centerheight)/2) - 5, centerwidth + 10, centerheight + 10, WHITE);
+    display.setCursor((SCREEN_WIDTH-centerwidth)/2, (SCREEN_HEIGHT-centerheight)/2);
+    display.println("Play");
+    display.display();
+    delay(150);
+
+    // Reset display properties
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.clearDisplay();
+
+    // Set game state
+    gameState = true;
+
+    // Draw court
+    display.drawRect(0, 0, 128, 64, WHITE);
 }
 
 // Update ball location
@@ -128,7 +179,7 @@ bool refreshBall(unsigned long time)
         // Check for a vertical wall collision, consequently call a goal
         if(new_x == 0)
         {
-            goal("USER"); // Player scored a goal
+            goal("PLAYER"); // Player scored a goal
         }
         else if(new_x == 127)
         {
@@ -181,7 +232,9 @@ bool refreshPaddles(unsigned long time)
         // Clear old CPU Paddle
         display.drawFastVLine(CPU_X, cpu_y, PADDLE_LENGTH, BLACK);
         // Move CPU Paddle based on the y coordinate of the ball
-        if (ball_x < 30) // Modification: gimping the CPU paddle by making it only move once the ball is on its own closest 30 pixels of the court
+        // The difficulty setting limits the horizontal proximity in which the CPU can 'see' the ball and move the paddle in response to it (max = 127, min 0)
+        // CPU paddle also gives up if the ball is already behind its paddle
+        if (ball_x < DIFFICULTY && ball_x >= 12)
         {
             if(cpu_y + half_paddle > ball_y) {
                 cpu_y -= 1;
@@ -248,49 +301,56 @@ void goal(String winner)
     display.display();
     delay(2000);
     display.clearDisplay();
+
     // If score passes some max value, display cooler animation and offer a replay
     if (player_score >= WIN_SCORE || cpu_score >= WIN_SCORE)
     {
         victoryScreen(winner);
         player_score = cpu_score = 0;
     }
+
     // Reset court and ball
     display.clearDisplay();
     display.drawRect(0, 0, 128, 64, WHITE);
     ball_x = 64, ball_y = 32;
-    // Random direction for the reset ball
+
+    // Random direction for the reset ball (-1/1 for both x and y)
     ball_dir_x = (-1 + 2*(rand() % 2)), ball_dir_y = (-1 + 2*(rand() % 2));
     new_x = ball_x + ball_dir_x;
     new_y = ball_y + ball_dir_y;
+
     // Reset paddles
     player_y = cpu_y = 16;
+
+    // Randomize CPU difficulty
+    DIFFICULTY = 12+(rand() % 43);
 }
 
 void victoryScreen(String winner)
 {
-    // Pull graphics from fireworks library and run an animation
-    for (int i = 0; i < e_allArray_LEN; i++)
+    // IF player won:
+    // Pull graphics from fireworks library and run an animation frame by frame
+    if (winner != "CPU")
     {
-        display.clearDisplay();
-        display.drawBitmap(0, 0, e_allArray[i], SCREEN_WIDTH, SCREEN_HEIGHT, 1);
-        display.display();
-        delay(100);
+        for (int i = 0; i < e_allArray_LEN; i++)
+        {
+            display.clearDisplay();
+            display.drawRect(0, 0, 128, 64, WHITE);
+            display.drawBitmap(0, 0, e_allArray[i], SCREEN_WIDTH, SCREEN_HEIGHT, 1);
+            display.display();
+            delay(100);
+        }
     }
     display.clearDisplay();
-
-    // Different text style for victory screen
-    display.setFont(&FreeMonoOblique9pt7b);
+    display.drawRect(0, 0, 128, 64, WHITE);
 
     // Animation and scoreboard display
     display.getTextBounds(String(winner + " WINS!"), 0, 0, &centercursorx, &centercursory, &centerwidth, &centerheight);
-    display.setCursor((SCREEN_WIDTH-centerwidth)/2, SCREEN_HEIGHT/2);
+    display.setCursor((SCREEN_WIDTH-centerwidth)/2, (SCREEN_HEIGHT-centerheight)/2);
     display.println(winner + " WINS!");
-    /* String scoreboard = "[CPU " + String(cpu_score) + " : " + String(player_score) + " PLAYER]";
-    display.getTextBounds(scoreboard, 0, 0, &centercursorx, &centercursory, &centerwidth, &centerheight);
-    display.setCursor((SCREEN_WIDTH-centerwidth)/2, ((SCREEN_HEIGHT-centerheight)/2) + 8);
-    display.println(scoreboard); */
     display.display();
     delay(2000);
-    // Different text style for victory screen
-    display.setFont(NULL);
+
+    // Reset game state to send player back to menu
+    gameState = false;
 }
