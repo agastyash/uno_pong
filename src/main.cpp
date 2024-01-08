@@ -27,14 +27,14 @@ void victoryScreen(String winner);
 void mainMenu();
 
 // Game variables
-const unsigned int WIN_SCORE =               5;
-const unsigned long PADDLE_UPDATE_RATE =    20;
-const unsigned long BALL_UPDATE_RATE =      5;
-const uint8_t PADDLE_LENGTH =               16;
-bool gameState =                         false;
+const unsigned int WIN_SCORE =               5; // Score required to win a match
+const unsigned long PADDLE_UPDATE_DELAY =   20; // Paddle speed
+const unsigned long BALL_UPDATE_DELAY =      5; // Ball speed
+const uint8_t PADDLE_LENGTH =               16; // Length of both paddles
+bool gameState =                         false; // Game state variable for menu implementation [TODO]
 
 // Ball variables
-uint8_t ball_x = 64, ball_y = 32; // Position
+uint8_t ball_x =    64, ball_y =    32; // Position
 uint8_t ball_dir_x = 1, ball_dir_y = 1; // Direction
 uint8_t new_x, new_y; // Updated position placeholders
 unsigned long ball_update;
@@ -44,13 +44,15 @@ unsigned long paddle_update;
 const uint8_t CPU_X = 12;
 uint8_t cpu_y = 16;
 
-// Player Paddle and control variables
+// Player Paddle variables
 const uint8_t PLAYER_X = 115;
-uint8_t player_y = 16;
-static bool up_state = false;
+uint8_t       player_y =  16;
+
+// Player Control input state booleans
+static bool   up_state = false;
 static bool down_state = false;
 
-// Half paddle length constant
+// Half paddle length (constant)
 const uint8_t half_paddle = PADDLE_LENGTH / 2;
 
 // Setup text centering value storage
@@ -80,9 +82,9 @@ void setup() {
     pinMode(UP_BUTTON, INPUT);
     pinMode(DOWN_BUTTON, INPUT);
 
-    // Enable internal pullup resistor on input pins (not necessary with 10kOhm resistors on the circuit already)
-    // digitalWrite(UP_BUTTON,1);
-    // digitalWrite(DOWN_BUTTON,1);
+    // Enable internal pull-up resistor on input pins
+    digitalWrite(UP_BUTTON,1);
+    digitalWrite(DOWN_BUTTON,1);
 
     // Draw court
     display.drawRect(0, 0, 128, 64, WHITE);
@@ -163,7 +165,7 @@ bool refreshBall(unsigned long time)
         ball_x = new_x;
         ball_y = new_y;
 
-        ball_update += BALL_UPDATE_RATE;
+        ball_update += BALL_UPDATE_DELAY;
         
         // Set update boolean to true to force display update
         return true;
@@ -211,7 +213,7 @@ bool refreshPaddles(unsigned long time)
         // Draw new CPU Paddle
         display.drawFastVLine(PLAYER_X, player_y, PADDLE_LENGTH, WHITE);
 
-        paddle_update += PADDLE_UPDATE_RATE;
+        paddle_update += PADDLE_UPDATE_DELAY;
 
         // Set update boolean to true to force display update
         return true;
