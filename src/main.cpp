@@ -28,11 +28,11 @@ void renderMenu();
 
 // Game variables
 const unsigned int WIN_SCORE =               5; // Score required to win a match
-const unsigned long PADDLE_UPDATE_DELAY =    1; // Paddle speed
-const unsigned long BALL_UPDATE_DELAY =      1; // Ball speed
+const unsigned long PADDLE_UPDATE_DELAY =    1; // Delay between paddle updates (ms)
+const unsigned long BALL_UPDATE_DELAY =      1; // Delay between ball updates (ms)
 const uint8_t PADDLE_LENGTH =               12; // Length of both paddles
-unsigned int DIFFICULTY =                   30; // CPU paddle difficulty setting
-bool gameState =                         false; // Game state variable for menu implementation [TODO]
+unsigned int DIFFICULTY =                   30; // CPU paddle difficulty setting (min 0, max 127)
+bool gameState =                         false; // Game state variable for menu implementation
 
 // Ball variables
 uint8_t ball_x =    64, ball_y =    32; // Position
@@ -87,7 +87,7 @@ void setup() {
     digitalWrite(UP_BUTTON,1);
     digitalWrite(DOWN_BUTTON,1);
 
-    // Start after 1 second has passed
+    // 1 second buffer before continuing
     while(millis() - start < 1000);
 
     // Set paddle and ball refresh counters before beginning game logic
@@ -110,7 +110,8 @@ void loop() {
 
     // Request an update if either the ball or paddles are due for a refresh
     update = refreshBall(time) | refreshPaddles(time);
-    // Bitwise OR operator '|' used above since the normal '||' OR operator will simply ignore the second condition to save time, if the first condition returns 'true'
+    // Bitwise OR operator '|' used above since the normal '||' OR operator will
+    // simply ignore the second condition to save time, if the first condition returns 'true'
 
     // Refresh display whenever requested
     if(update && gameState)
