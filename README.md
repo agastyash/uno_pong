@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/distroquerim/uno_pong">
+  <a href="https://github.com/agastyash/uno_pong">
     <img src="assets/logo.jpg" alt="Logo" width="80" height="80">
   </a>
 
@@ -10,14 +10,14 @@
     A simple pong game running on an Arduino Uno and an SSD1306 OLED display.
     <br />
     <br />
-    <a href="https://github.com/distroquerim/uno_pong">View Demo</a>
+    <a href="https://github.com/agastyash/uno_pong">View Demo</a>
   </p>
 </div>
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-Implementation of a basic pong game played against a computer controlled player on a cheap OLED display with a basic UI. Player controls use generic push buttons.
+Implementation of a basic pong game played against a computer controlled player on an inexpensive OLED display with a basic UI. Player controls use two generic 4 pin push buttons.
 Built for a beginner Arduino project and showcase.
 
 
@@ -35,16 +35,4 @@ Built for a beginner Arduino project and showcase.
 
 ## Demo
 
-Video Placeholder
-
-
-## License
-
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-
-## Contact
-
-distroquerim - distroquerim@gmail.com
-
-Project Link: [https://github.com/distroquerim/uno_pong](https://github.com/distroquerim/uno_pong)
+[[ ]]
