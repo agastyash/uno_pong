@@ -35,4 +35,4 @@ Built for a beginner Arduino project and showcase.
 
 ## Media
 
-![](https://imgur.com/n3VykIz)
+![](https://imgur.com/n3VykIz.jpg)
