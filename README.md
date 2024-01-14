@@ -33,6 +33,6 @@ Built for a beginner Arduino project and showcase.
 * SSD1306 I2C OLED Display
 * Basic push buttons
 
-## Demo
+## Media
 
-[[ ]]
+![](https://imgur.com/n3VykIz)
