@@ -34,4 +34,4 @@ Built for a beginner Arduino project and showcase.
 ## Media
 
 ![a9](https://github.com/agastyash/uno_pong/assets/45848089/d2b77de1-34ce-413e-9c93-1fc10bcef7ec)
-![](https://imgur.com/n3VykIz.jpg)
+![68747470733a2f2f696d6775722e636f6d2f6e3356796b497a2e6a7067](https://github.com/agastyash/uno_pong/assets/45848089/1e0969f8-9439-476b-9d23-cbfa7bf7390c)
