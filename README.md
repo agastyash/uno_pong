@@ -9,8 +9,6 @@
   <p align="center">
     A simple pong game running on an Arduino Uno and an SSD1306 OLED display.
     <br />
-    <br />
-    <a href="https://github.com/agastyash/uno_pong">View Demo</a>
   </p>
 </div>
 
@@ -35,4 +33,5 @@ Built for a beginner Arduino project and showcase.
 
 ## Media
 
+![a9](https://github.com/agastyash/uno_pong/assets/45848089/d2b77de1-34ce-413e-9c93-1fc10bcef7ec)
 ![](https://imgur.com/n3VykIz.jpg)
